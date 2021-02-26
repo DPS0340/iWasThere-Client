@@ -1,9 +1,11 @@
 package xyz.dps0340.iwasthere.ui.home
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,8 +15,7 @@ import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.google.android.material.button.MaterialButton
 import splitties.toast.toast
 import xyz.dps0340.iwasthere.MainActivity
@@ -24,6 +25,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var homeViewModel: HomeViewModel
     private val permissionCode: Int = 202
+    private lateinit var locationCallback: LocationCallback
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -35,6 +37,18 @@ class HomeFragment : Fragment() {
         val root = inflater.inflate(R.layout.fragment_home, container, false)
         val textView: TextView = root.findViewById(R.id.text_home)
         val button: Button = root.findViewById(R.id.location_button)
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult?) {
+                locationResult ?: return
+                for (location in locationResult.locations){
+                    location?.let {
+                        val lat = it.latitude
+                        val long = it.longitude
+                        textView.text = "latitude: $lat | longitude: $long"
+                    }
+                }
+            }
+        }
         button.setOnClickListener {
             val mainActivity = MainActivity.instance
             val client = mainActivity.fusedLocationClient
@@ -56,20 +70,21 @@ class HomeFragment : Fragment() {
                     mainActivity.requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), permissionCode)
                 return@setOnClickListener
             }
-            client.lastLocation
-                .addOnSuccessListener { location : Location? ->
-                    // Got last known location. In some rare situations this can be null.
-                    location?.let {
-                        val lat = it.latitude
-                        val long = it.longitude
-                        textView.text = "latitude: $lat | longitude: $long"
-                    }
-                }
+            startLocationUpdates(client, locationCallback)
         }
         homeViewModel.text.observe(viewLifecycleOwner, Observer {
             textView.text = it
         })
         return root
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startLocationUpdates(client: FusedLocationProviderClient, callback: LocationCallback) {
+        val locationRequest = LocationRequest().setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
+        client.requestLocationUpdates(
+            locationRequest,
+            callback,
+            Looper.getMainLooper())
     }
 
     override fun onRequestPermissionsResult(requestCode: Int,

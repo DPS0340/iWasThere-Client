@@ -19,9 +19,11 @@ import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.tasks.Task
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest
+import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse
 import com.google.android.libraries.places.api.net.PlacesClient
 import xyz.dps0340.iwasthere.LocationHelper
 import xyz.dps0340.iwasthere.MainActivity
@@ -69,9 +71,47 @@ class DashboardFragment : Fragment(), OnMapReadyCallback {
                 val placeFields = listOf(Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG)
                 val request = FindCurrentPlaceRequest.newInstance(placeFields)
                 val placeResult = placesClient.findCurrentPlace(request)
+                placeResult.addOnCompleteListener { task ->
+                    placeResultListener(task)
+                }
             }
         }
         return view
+    }
+
+    private fun placeResultListener(task: Task<FindCurrentPlaceResponse>) {
+        if (task.isSuccessful && task.result != null) {
+            val likelyPlaces = task.result
+
+            // Set the count, handling cases where less than 5 entries are returned.
+            val count = if (likelyPlaces != null && likelyPlaces.placeLikelihoods.size < M_MAX_ENTRIES) {
+                likelyPlaces.placeLikelihoods.size
+            } else {
+                M_MAX_ENTRIES
+            }
+            var i = 0
+            likelyPlaceNames = arrayOfNulls(count)
+            likelyPlaceAddresses = arrayOfNulls(count)
+            likelyPlaceAttributions = arrayOfNulls<List<*>?>(count)
+            likelyPlaceLatLngs = arrayOfNulls(count)
+            for (placeLikelihood in likelyPlaces?.placeLikelihoods ?: emptyList()) {
+                // Build a list of likely places to show the user.
+                likelyPlaceNames[i] = placeLikelihood.place.name
+                likelyPlaceAddresses[i] = placeLikelihood.place.address
+                likelyPlaceAttributions[i] = placeLikelihood.place.attributions
+                likelyPlaceLatLngs[i] = placeLikelihood.place.latLng
+                i++
+                if (i > count - 1) {
+                    break
+                }
+            }
+
+            // Show a dialog offering the user the list of likely places, and add a
+            // marker at the selected place.
+            openPlacesDialog()
+        } else {
+            Log.e(label, "Exception: %s", task.exception)
+        }
     }
 
     private fun plot(locationResult: LocationResult?) {
@@ -164,5 +204,6 @@ class DashboardFragment : Fragment(), OnMapReadyCallback {
 
     companion object {
         private const val DEFAULT_ZOOM = 17.0F
+        private const val M_MAX_ENTRIES = 5
     }
 }

@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -18,7 +19,9 @@ import androidx.lifecycle.ViewModelProviders
 import com.google.android.gms.location.*
 import com.google.android.material.button.MaterialButton
 import splitties.toast.toast
+import xyz.dps0340.iwasthere.LocationHelper
 import xyz.dps0340.iwasthere.MainActivity
+import xyz.dps0340.iwasthere.PermissionHelper
 import xyz.dps0340.iwasthere.R
 
 class HomeFragment : Fragment() {
@@ -52,25 +55,7 @@ class HomeFragment : Fragment() {
         button.setOnClickListener {
             val mainActivity = MainActivity.instance
             val client = mainActivity.fusedLocationClient
-            if (ActivityCompat.checkSelfPermission(
-                    mainActivity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                    mainActivity,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                    mainActivity.requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), permissionCode)
-                return@setOnClickListener
-            }
-            startLocationUpdates(client, locationCallback)
+            LocationHelper.startLocationUpdates(mainActivity, client, locationCallback, permissionCode)
         }
         homeViewModel.text.observe(viewLifecycleOwner, Observer {
             textView.text = it
@@ -78,14 +63,7 @@ class HomeFragment : Fragment() {
         return root
     }
 
-    @SuppressLint("MissingPermission")
-    private fun startLocationUpdates(client: FusedLocationProviderClient, callback: LocationCallback) {
-        val locationRequest = LocationRequest().setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
-        client.requestLocationUpdates(
-            locationRequest,
-            callback,
-            Looper.getMainLooper())
-    }
+
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {

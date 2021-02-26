@@ -13,9 +13,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import xyz.dps0340.iwasthere.R
 
 class DashboardFragment : Fragment(), OnMapReadyCallback {
-
-    private lateinit var dashboardViewModel: DashboardViewModel
-
+    lateinit var googleMap: GoogleMap
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
@@ -30,6 +28,7 @@ class DashboardFragment : Fragment(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap?) {
         googleMap ?: return
+        this.googleMap = googleMap
         googleMap.addMarker(
             MarkerOptions()
                 .position(LatLng(0.0, 0.0))

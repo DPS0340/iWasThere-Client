@@ -1,3 +1,8 @@
+
+plugins {
+    id 'com.google.secrets_gradle_plugin' version '0.5'
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
@@ -75,7 +80,9 @@ dependencies {
     // a library of a bunch of helper functions
     implementation "com.louiscad.splitties:splitties-fun-pack-android-base:3.0.0-beta01"
     // google maps, location API
+    // maps latest: 17.0.0 (see https://developers.google.com/android/guides/setup)
     implementation 'com.google.android.gms:play-services-location:11.8.0'
+    implementation 'com.google.android.gms:play-services-maps:11.8.0'
 
 
 }

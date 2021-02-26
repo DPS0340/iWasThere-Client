@@ -7,25 +7,13 @@ import androidx.core.app.ActivityCompat
 
 object PermissionHelper {
     fun ensurePermissions(activity: AppCompatActivity, permissions: Array<String>, permissionCode: Int): Boolean {
-        if (ActivityCompat.checkSelfPermission(
-                activity,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                activity,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            activity.requestPermissions(permissions, permissionCode)
+        val filteredPermissions = permissions.filter {
+            ActivityCompat.checkSelfPermission(activity, it) != PackageManager.PERMISSION_GRANTED
+        }.toTypedArray()
+        if (filteredPermissions.isEmpty()) {
             return true
-        } else {
-            return false
         }
+        activity.requestPermissions(filteredPermissions, permissionCode)
+        return true
     }
 }

@@ -10,11 +10,8 @@ import com.google.android.gms.location.LocationRequest
 
 object LocationHelper {
     @SuppressLint("MissingPermission")
-    fun startLocationUpdates(activity: AppCompatActivity, client: FusedLocationProviderClient, callback: LocationCallback, permissionCode: Int, priority: Int = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY) {
-        val isEnsured = PermissionHelper.ensurePermissions(activity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), permissionCode)
-        if(!isEnsured) {
-            return
-        }
+    fun startLocationUpdates(activity: AppCompatActivity, client: FusedLocationProviderClient, callback: LocationCallback, permissionCode: Int = PermissionCode.default, priority: Int = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY) {
+        PermissionHelper.ensurePermissions(activity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), permissionCode)
         val locationRequest = LocationRequest().setPriority(priority)
         client.requestLocationUpdates(
             locationRequest,

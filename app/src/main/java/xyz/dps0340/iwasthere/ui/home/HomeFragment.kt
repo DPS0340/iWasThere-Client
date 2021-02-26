@@ -27,7 +27,6 @@ import xyz.dps0340.iwasthere.R
 class HomeFragment : Fragment() {
 
     private lateinit var homeViewModel: HomeViewModel
-    private val permissionCode: Int = 202
     private lateinit var locationCallback: LocationCallback
 
     override fun onCreateView(
@@ -55,7 +54,7 @@ class HomeFragment : Fragment() {
         button.setOnClickListener {
             val mainActivity = MainActivity.instance
             val client = mainActivity.fusedLocationClient
-            LocationHelper.startLocationUpdates(mainActivity, client, locationCallback, permissionCode)
+            LocationHelper.startLocationUpdates(mainActivity, client, locationCallback)
         }
         homeViewModel.text.observe(viewLifecycleOwner, Observer {
             textView.text = it
@@ -65,33 +64,5 @@ class HomeFragment : Fragment() {
 
 
 
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            permissionCode -> {
-                // If request is cancelled, the result arrays are empty.
-                if ((grantResults.isNotEmpty() &&
-                            grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    toast("Access Granted!")
-                    // Permission is granted. Continue the action or workflow
-                    // in your app.
-                } else {
-                    // Explain to the user that the feature is unavailable because
-                    // the features requires a permission that the user has denied.
-                    // At the same time, respect the user's decision. Don't link to
-                    // system settings in an effort to convince the user to change
-                    // their decision.
-                    toast("Not available location service")
-                }
-                return
-            }
 
-            // Add other 'when' lines to check for other
-            // permissions this app might request.
-            else -> {
-                // Ignore all other requests.
-                toast("Give the permissions, please.")
-            }
-        }
-    }
 }

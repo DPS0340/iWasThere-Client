@@ -164,7 +164,7 @@ class DashboardFragment : Fragment(), OnMapReadyCallback {
         LocationHelper.startLocationUpdates(mainActivity, client, locationCallback)
     }
 
-    private fun recursiveUpdate(delayMillis: Long = 5000L) {
+    private fun recursiveUpdate(delayMillis: Long = INTERVAL) {
         Handler().postDelayed({
             update()
             Handler().postDelayed({
@@ -189,5 +189,6 @@ class DashboardFragment : Fragment(), OnMapReadyCallback {
     companion object {
         private const val DEFAULT_ZOOM = 17.0F
         private const val M_MAX_ENTRIES = 5
+        private const val INTERVAL = 5000L
     }
 }

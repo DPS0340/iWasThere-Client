@@ -105,6 +105,10 @@ class DashboardFragment : Fragment(), OnMapReadyCallback {
                     break
                 }
             }
+            Log.i(label, likelyPlaceNames.toString())
+            Log.i(label, likelyPlaceAddresses.toString())
+            Log.i(label, likelyPlaceAttributions.toString())
+            Log.i(label, likelyPlaceLatLngs.toString())
 
             // Show a dialog offering the user the list of likely places, and add a
             // marker at the selected place.

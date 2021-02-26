@@ -13,6 +13,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -23,6 +24,8 @@ import xyz.dps0340.iwasthere.LocationHelper
 import xyz.dps0340.iwasthere.MainActivity
 import xyz.dps0340.iwasthere.PermissionHelper
 import xyz.dps0340.iwasthere.R
+import xyz.dps0340.iwasthere.databinding.FragmentHomeBinding
+import xyz.dps0340.iwasthere.databinding.FragmentHomeBinding.inflate
 
 class HomeFragment : Fragment() {
 
@@ -36,30 +39,18 @@ class HomeFragment : Fragment() {
     ): View? {
         homeViewModel =
                 ViewModelProviders.of(this).get(HomeViewModel::class.java)
-        val root = inflater.inflate(R.layout.fragment_home, container, false)
-        val textView: TextView = root.findViewById(R.id.text_home)
-        val button: Button = root.findViewById(R.id.location_button)
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult?) {
-                locationResult ?: return
-                for (location in locationResult.locations){
-                    location?.let {
-                        val lat = it.latitude
-                        val long = it.longitude
-                        textView.text = "latitude: $lat | longitude: $long"
-                    }
-                }
-            }
-        }
-        button.setOnClickListener {
-            val mainActivity = MainActivity.instance
-            val client = mainActivity.fusedLocationClient
-            LocationHelper.startLocationUpdates(mainActivity, client, locationCallback)
-        }
+        val binding: FragmentHomeBinding = DataBindingUtil.inflate(
+            inflater,
+            R.layout.fragment_home,
+            container,
+            false
+        )
+        binding.viewModel = homeViewModel
+        val textView: TextView = binding.root.findViewById(R.id.text_home)
         homeViewModel.text.observe(viewLifecycleOwner, Observer {
             textView.text = it
         })
-        return root
+        return binding.root
     }
 
 

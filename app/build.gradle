@@ -83,6 +83,7 @@ dependencies {
     // maps latest: 17.0.0 (see https://developers.google.com/android/guides/setup)
     implementation 'com.google.android.gms:play-services-location:11.8.0'
     implementation 'com.google.android.gms:play-services-maps:11.8.0'
-
+    // places API
+    implementation 'com.google.android.libraries.places:places:2.4.0'
 
 }

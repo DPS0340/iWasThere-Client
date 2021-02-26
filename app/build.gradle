@@ -74,7 +74,8 @@ dependencies {
     implementation 'gun0912.ted:tedpermission:2.2.3'
     // a library of a bunch of helper functions
     implementation "com.louiscad.splitties:splitties-fun-pack-android-base:3.0.0-beta01"
-    implementation 'com.google.android.gms:play-services-location:18.0.0'
+    // google maps, location API
+    implementation 'com.google.android.gms:play-services:12.0.1'
 
 
 }

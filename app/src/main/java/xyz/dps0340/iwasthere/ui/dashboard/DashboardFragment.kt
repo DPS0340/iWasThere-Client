@@ -28,6 +28,8 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import xyz.dps0340.iwasthere.LocationHelper
 import xyz.dps0340.iwasthere.MainActivity
 import xyz.dps0340.iwasthere.R
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class DashboardFragment : Fragment(), OnMapReadyCallback {
@@ -38,10 +40,10 @@ class DashboardFragment : Fragment(), OnMapReadyCallback {
     lateinit var placesClient: PlacesClient
     val history = mutableListOf<LatLng>()
     val label = "GoogleMap"
-    private var likelyPlaceNames: Array<String?> = arrayOfNulls(0)
-    private var likelyPlaceAddresses: Array<String?> = arrayOfNulls(0)
-    private var likelyPlaceAttributions: Array<List<*>?> = arrayOfNulls(0)
-    private var likelyPlaceLatLngs: Array<LatLng?> = arrayOfNulls(0)
+    private var likelyPlaceName: String? = null
+    private var likelyPlaceAddress: String?  = null
+    private var likelyPlaceAttribution: List<*>? = null
+    private var likelyPlaceLatLng: LatLng? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -82,37 +84,21 @@ class DashboardFragment : Fragment(), OnMapReadyCallback {
     private fun placeResultListener(task: Task<FindCurrentPlaceResponse>) {
         if (task.isSuccessful && task.result != null) {
             val likelyPlaces = task.result
-
-            // Set the count, handling cases where less than 5 entries are returned.
-            val count = if (likelyPlaces != null && likelyPlaces.placeLikelihoods.size < M_MAX_ENTRIES) {
-                likelyPlaces.placeLikelihoods.size
-            } else {
-                M_MAX_ENTRIES
+            if((likelyPlaces?.placeLikelihoods ?: emptyList()).isNotEmpty()) {
+                val placeLikelihood = likelyPlaces.placeLikelihoods.get(0)
+                likelyPlaceName = placeLikelihood.place.name
+                likelyPlaceAddress = placeLikelihood.place.address
+                likelyPlaceAttribution = placeLikelihood.place.attributions
+                likelyPlaceLatLng = placeLikelihood.place.latLng
             }
-            var i = 0
-            likelyPlaceNames = arrayOfNulls(count)
-            likelyPlaceAddresses = arrayOfNulls(count)
-            likelyPlaceAttributions = arrayOfNulls<List<*>?>(count)
-            likelyPlaceLatLngs = arrayOfNulls(count)
-            for (placeLikelihood in likelyPlaces?.placeLikelihoods ?: emptyList()) {
-                // Build a list of likely places to show the user.
-                likelyPlaceNames[i] = placeLikelihood.place.name
-                likelyPlaceAddresses[i] = placeLikelihood.place.address
-                likelyPlaceAttributions[i] = placeLikelihood.place.attributions
-                likelyPlaceLatLngs[i] = placeLikelihood.place.latLng
-                i++
-                if (i > count - 1) {
-                    break
-                }
-            }
-            Log.i(label, likelyPlaceNames.toString())
-            Log.i(label, likelyPlaceAddresses.toString())
-            Log.i(label, likelyPlaceAttributions.toString())
-            Log.i(label, likelyPlaceLatLngs.toString())
+            Log.i(label, likelyPlaceName.toString())
+            Log.i(label, likelyPlaceAddress.toString())
+            Log.i(label, likelyPlaceAttribution.toString())
+            Log.i(label, likelyPlaceLatLng.toString())
 
             // Show a dialog offering the user the list of likely places, and add a
             // marker at the selected place.
-            openPlacesDialog()
+            showPlace()
         } else {
             Log.e(label, "Exception: %s", task.exception)
         }
@@ -120,17 +106,17 @@ class DashboardFragment : Fragment(), OnMapReadyCallback {
 
     private fun plot(locationResult: LocationResult?) {
         locationResult ?: return
-        var counter = 0
         Log.i(label, locationResult.locations.toString())
         val mapped = locationResult.locations.map{ it -> LatLng(it.latitude, it.longitude) }
         history.addAll(mapped)
         for (latLng in mapped) {
             latLng.let {
-                counter++
+                val sdf = SimpleDateFormat("yyyy/mm/dd hh:mm:ss")
+                val currentDate = sdf.format(Date())
                 googleMap.addMarker(
                     MarkerOptions()
                         .position(latLng)
-                        .title("Marker $counter")
+                        .title(currentDate)
                 )
                 Log.i(label, latLng.toString())
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM))
@@ -143,41 +129,35 @@ class DashboardFragment : Fragment(), OnMapReadyCallback {
         )
     }
 
-    private fun openPlacesDialog() {
+    private fun showPlace() {
         // Ask the user to choose the place where they are now.
-        val listener = DialogInterface.OnClickListener { dialog, which -> // The "which" argument contains the position of the selected item.
-            val markerLatLng = likelyPlaceLatLngs[which]
-            var markerSnippet = likelyPlaceAddresses[which]
-            if (likelyPlaceAttributions[which] != null) {
-                markerSnippet = """
-                    $markerSnippet
-                    ${likelyPlaceAttributions[which]}
-                    """.trimIndent()
-            }
-
-            // Add a marker for the selected place, with an info window
-            // showing information about that place.
-            googleMap.addMarker(
-                MarkerOptions()
-                    .title(likelyPlaceNames[which])
-                    .position(markerLatLng!!)
-                    .snippet(markerSnippet)
-            )
-
-            // Position the map's camera at the location of the marker.
-            googleMap.moveCamera(
-                CameraUpdateFactory.newLatLngZoom(
-                    markerLatLng,
-                    DEFAULT_ZOOM
-                )
-            )
+        val markerLatLng = likelyPlaceLatLng
+        var markerSnippet = likelyPlaceAddress
+        val sdf = SimpleDateFormat("yyyy/mm/dd hh:mm:ss")
+        val currentDate = sdf.format(Date())
+        if (likelyPlaceAttribution != null) {
+            markerSnippet = """
+                $markerSnippet
+                $likelyPlaceAttribution
+                """.trimIndent()
         }
 
-        // Display the dialog.
-        AlertDialog.Builder(mainActivity)
-            .setTitle("PICKED PLACE")
-            .setItems(likelyPlaceNames, listener)
-            .show()
+        // Add a marker for the selected place, with an info window
+        // showing information about that place.
+        googleMap.addMarker(
+            MarkerOptions()
+                .title("$likelyPlaceName at $currentDate\n")
+                .position(markerLatLng!!)
+                .snippet(markerSnippet)
+        )
+
+        // Position the map's camera at the location of the marker.
+        googleMap.moveCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                markerLatLng,
+                DEFAULT_ZOOM
+            )
+        )
     }
 
     private fun update() {

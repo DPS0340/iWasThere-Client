@@ -36,7 +36,7 @@ class HomeFragment : Fragment() {
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         homeViewModel =
                 ViewModelProviders.of(this).get(HomeViewModel::class.java)
         val binding: FragmentHomeBinding = DataBindingUtil.inflate(
